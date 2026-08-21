@@ -1,0 +1,16 @@
+spring.datasource.url=jdbc:postgresql://localhost:5432/soportenet_isp
+spring.datasource.username=postgres
+spring.datasource.password=tu_password_aqui
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+server.port=8080
+
+# Clave para firmar los JWT de sesion. Genera la tuya propia, no reutilices
+# ninguna clave que hayas visto en el chat del proyecto. Una forma facil:
+# en una terminal (Git Bash) corre: openssl rand -base64 48
+app.jwt.secret=cambia_esto_por_tu_propia_clave_aleatoria
+app.jwt.expiration-minutes=120

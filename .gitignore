@@ -1,0 +1,11 @@
+# Backend: compilado de Maven y config con contraseñas/claves reales
+soporte-tecnico/target/
+soporte-tecnico/src/main/resources/application.properties
+
+# IDE
+.idea/
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
