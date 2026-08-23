@@ -173,23 +173,39 @@ public class SecurityConfig {
                         .hasRole("SUPERUSUARIO")
 
 
-                        /*
-                         * =====================================================
-                         * GRUPOS TECNICOS
-                         * =====================================================
-                         */
+                                /*
+                                 * =====================================================
+                                 * GRUPOS TECNICOS
+                                 * =====================================================
+                                 */
 
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/grupos-tecnicos/**"
-                        )
-                        .hasRole("SUPERUSUARIO")
+                                /*
+                                 * Superusuario crea grupos y administra miembros.
+                                 */
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/api/grupos-tecnicos/**"
+                                )
+                                .hasRole("SUPERUSUARIO")
 
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/api/grupos-tecnicos/**"
-                        )
-                        .hasRole("SUPERUSUARIO")
+                                .requestMatchers(
+                                        HttpMethod.DELETE,
+                                        "/api/grupos-tecnicos/**"
+                                )
+                                .hasRole("SUPERUSUARIO")
+
+                                /*
+                                 * Superusuario administra los grupos.
+                                 * Administrador necesita consultarlos para asignar tickets.
+                                 */
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/api/grupos-tecnicos"
+                                )
+                                .hasAnyRole(
+                                        "SUPERUSUARIO",
+                                        "ADMINISTRADOR"
+                                )
 
 
                         /*
