@@ -27,13 +27,6 @@ public class SolicitudController {
         this.solicitudRepository = solicitudRepository;
     }
 
-    /**
-     * Cliente crea una nueva solicitud de soporte.
-     * Toda la logica de negocio vive en PostgreSQL mediante
-     * sp_crear_solicitud.
-     *
-     * El idCliente se obtiene del JWT y no del body.
-     */
     @PostMapping
     @Transactional
     public ResponseEntity<SolicitudResponse> crear(
@@ -58,19 +51,6 @@ public class SolicitudController {
                 .body(SolicitudResponse.fromEntity(creada));
     }
 
-    /**
-     * Consulta el detalle de una solicitud.
-     *
-     * ADMINISTRADOR y SUPERUSUARIO:
-     * pueden consultar cualquier solicitud.
-     *
-     * CLIENTE:
-     * solamente puede consultar sus propias solicitudes.
-     *
-     * TECNICO:
-     * temporalmente se valida en un siguiente paso según
-     * asignación directa o grupo técnico.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<SolicitudResponse> obtener(
             @PathVariable Long id,
@@ -83,10 +63,6 @@ public class SolicitudController {
             return ResponseEntity.notFound().build();
         }
 
-        /*
-         * Administrador y Superusuario pueden consultar
-         * cualquier solicitud.
-         */
         if (tieneRol(authentication, "ADMINISTRADOR")
                 || tieneRol(authentication, "SUPERUSUARIO")) {
 
@@ -97,10 +73,6 @@ public class SolicitudController {
 
         Long idUsuario = Long.valueOf(authentication.getName());
 
-        /*
-         * Cliente:
-         * solamente puede consultar solicitudes que le pertenecen.
-         */
         if (tieneRol(authentication, "CLIENTE")) {
 
             if (solicitud.getCliente() != null
@@ -119,35 +91,30 @@ public class SolicitudController {
                     .build();
         }
 
-        /*
-         * Tecnico:
-         * en el siguiente paso comprobaremos si la solicitud
-         * esta asignada directamente al tecnico o a uno de
-         * los grupos a los que pertenece.
-         */
         if (tieneRol(authentication, "TECNICO")) {
+
+            boolean tieneAcceso =
+                    solicitudRepository.tecnicoTieneAcceso(
+                            id,
+                            idUsuario
+                    );
+
+            if (tieneAcceso) {
+                return ResponseEntity.ok(
+                        SolicitudResponse.fromEntity(solicitud)
+                );
+            }
+
             return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
                     .build();
         }
 
-        /*
-         * Cualquier otro rol no autorizado.
-         */
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .build();
     }
 
-    /**
-     * Cliente:
-     * lista sus propias solicitudes.
-     *
-     * Administrador/Superusuario:
-     * lista todas las solicitudes.
-     *
-     * Se puede filtrar opcionalmente por estado.
-     */
     @GetMapping
     public ResponseEntity<Page<SolicitudResponse>> listar(
             @RequestParam(required = false) String estado,
@@ -167,12 +134,12 @@ public class SolicitudController {
             pagina = (estado != null)
                     ? solicitudRepository
                     .findByEstadoNombreEstado(estado, pageable)
-                    : solicitudRepository.findAll(pageable);
+                    : solicitudRepository
+                    .findAll(pageable);
 
         } else {
 
-            Long idCliente =
-                    Long.valueOf(authentication.getName());
+            Long idCliente = Long.valueOf(authentication.getName());
 
             pagina = (estado != null)
                     ? solicitudRepository
@@ -193,18 +160,13 @@ public class SolicitudController {
         );
     }
 
-    /**
-     * Tecnico:
-     * lista las solicitudes asignadas directamente al técnico
-     * o a alguno de sus grupos.
-     */
     @GetMapping("/mis-tareas")
     public ResponseEntity<Page<SolicitudResponse>> misTareas(
-            @PageableDefault(size = 20) Pageable pageable,
+            @PageableDefault(size = 20)
+            Pageable pageable,
             Authentication authentication) {
 
-        Long idTecnico =
-                Long.valueOf(authentication.getName());
+        Long idTecnico = Long.valueOf(authentication.getName());
 
         Page<Solicitud> pagina =
                 solicitudRepository.findMisTareas(
@@ -217,15 +179,6 @@ public class SolicitudController {
         );
     }
 
-    /**
-     * Cliente confirma o rechaza la solución del ticket.
-     *
-     * Si confirma:
-     * el ticket puede cerrarse.
-     *
-     * Si indica que el problema persiste:
-     * la solicitud vuelve a proceso.
-     */
     @PostMapping("/{id}/confirmacion")
     @Transactional
     public ResponseEntity<SolicitudResponse> confirmar(
@@ -233,8 +186,7 @@ public class SolicitudController {
             @Valid @RequestBody ConfirmarClienteRequest request,
             Authentication authentication) {
 
-        Long idCliente =
-                Long.valueOf(authentication.getName());
+        Long idCliente = Long.valueOf(authentication.getName());
 
         solicitudRepository.confirmarCliente(
                 id,
@@ -246,8 +198,7 @@ public class SolicitudController {
                 solicitudRepository.findById(id)
                         .orElseThrow(() ->
                                 new IllegalStateException(
-                                        "La solicitud se confirmo "
-                                                + "pero no se pudo recuperar "
+                                        "La solicitud se confirmo pero no se pudo recuperar "
                                                 + "(id=" + id + ")"
                                 )
                         );
@@ -257,9 +208,6 @@ public class SolicitudController {
         );
     }
 
-    /**
-     * Comprueba si el usuario autenticado posee un rol determinado.
-     */
     private boolean tieneRol(
             Authentication authentication,
             String rol) {
