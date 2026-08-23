@@ -29,15 +29,16 @@ public class SolicitudController {
 
     /**
      * Cliente crea una nueva solicitud de soporte.
-     * Toda la logica de negocio (validaciones, estado inicial "Pendiente")
-     * vive en sp_crear_solicitud dentro de PostgreSQL; este endpoint solo
-     * la invoca y devuelve el ticket recien creado. idCliente sale del JWT
-     * (SecurityConfig exige rol CLIENTE para este endpoint), no del body.
+     * Toda la logica de negocio vive en PostgreSQL mediante
+     * sp_crear_solicitud.
+     *
+     * El idCliente se obtiene del JWT y no del body.
      */
     @PostMapping
     @Transactional
-    public ResponseEntity<SolicitudResponse> crear(@Valid @RequestBody CrearSolicitudRequest request,
-                                                     Authentication authentication) {
+    public ResponseEntity<SolicitudResponse> crear(
+            @Valid @RequestBody CrearSolicitudRequest request,
+            Authentication authentication) {
 
         Long idCliente = Long.valueOf(authentication.getName());
 
@@ -49,97 +50,230 @@ public class SolicitudController {
 
         Solicitud creada = solicitudRepository.findById(idSolicitud)
                 .orElseThrow(() -> new IllegalStateException(
-                        "La solicitud se creo pero no se pudo recuperar (id=" + idSolicitud + ")"));
+                        "La solicitud se creo pero no se pudo recuperar (id="
+                                + idSolicitud + ")"));
 
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .body(SolicitudResponse.fromEntity(creada));
     }
 
     /**
-     * Consulta el detalle de una solicitud (caso de uso 4.1.5 del documento).
+     * Consulta el detalle de una solicitud.
+     *
+     * ADMINISTRADOR y SUPERUSUARIO:
+     * pueden consultar cualquier solicitud.
+     *
+     * CLIENTE:
+     * solamente puede consultar sus propias solicitudes.
+     *
+     * TECNICO:
+     * temporalmente se valida en un siguiente paso según
+     * asignación directa o grupo técnico.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<SolicitudResponse> obtener(@PathVariable Long id) {
-        return solicitudRepository.findById(id)
-                .map(SolicitudResponse::fromEntity)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<SolicitudResponse> obtener(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Solicitud solicitud = solicitudRepository.findById(id)
+                .orElse(null);
+
+        if (solicitud == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        /*
+         * Administrador y Superusuario pueden consultar
+         * cualquier solicitud.
+         */
+        if (tieneRol(authentication, "ADMINISTRADOR")
+                || tieneRol(authentication, "SUPERUSUARIO")) {
+
+            return ResponseEntity.ok(
+                    SolicitudResponse.fromEntity(solicitud)
+            );
+        }
+
+        Long idUsuario = Long.valueOf(authentication.getName());
+
+        /*
+         * Cliente:
+         * solamente puede consultar solicitudes que le pertenecen.
+         */
+        if (tieneRol(authentication, "CLIENTE")) {
+
+            if (solicitud.getCliente() != null
+                    && solicitud.getCliente().getIdUsuario() != null
+                    && solicitud.getCliente()
+                    .getIdUsuario()
+                    .equals(idUsuario)) {
+
+                return ResponseEntity.ok(
+                        SolicitudResponse.fromEntity(solicitud)
+                );
+            }
+
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .build();
+        }
+
+        /*
+         * Tecnico:
+         * en el siguiente paso comprobaremos si la solicitud
+         * esta asignada directamente al tecnico o a uno de
+         * los grupos a los que pertenece.
+         */
+        if (tieneRol(authentication, "TECNICO")) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .build();
+        }
+
+        /*
+         * Cualquier otro rol no autorizado.
+         */
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .build();
     }
 
     /**
-     * Cliente: lista sus propias solicitudes, opcionalmente filtradas por
-     * estado (caso de uso 4.1.4). Administrador/Superusuario: lista TODAS
-     * las solicitudes, opcionalmente filtradas por estado (caso de uso
-     * 4.3.3). Paginado (seccion 6.3): 20 filas por defecto.
+     * Cliente:
+     * lista sus propias solicitudes.
+     *
+     * Administrador/Superusuario:
+     * lista todas las solicitudes.
+     *
+     * Se puede filtrar opcionalmente por estado.
      */
     @GetMapping
     public ResponseEntity<Page<SolicitudResponse>> listar(
             @RequestParam(required = false) String estado,
-            @PageableDefault(size = 20, sort = "fechaCreacion", direction = Sort.Direction.DESC) Pageable pageable,
+            @PageableDefault(
+                    size = 20,
+                    sort = "fechaCreacion",
+                    direction = Sort.Direction.DESC
+            )
+            Pageable pageable,
             Authentication authentication) {
 
         Page<Solicitud> pagina;
 
-        if (tieneRol(authentication, "ADMINISTRADOR") || tieneRol(authentication, "SUPERUSUARIO")) {
+        if (tieneRol(authentication, "ADMINISTRADOR")
+                || tieneRol(authentication, "SUPERUSUARIO")) {
+
             pagina = (estado != null)
-                    ? solicitudRepository.findByEstadoNombreEstado(estado, pageable)
+                    ? solicitudRepository
+                    .findByEstadoNombreEstado(estado, pageable)
                     : solicitudRepository.findAll(pageable);
+
         } else {
-            Long idCliente = Long.valueOf(authentication.getName());
+
+            Long idCliente =
+                    Long.valueOf(authentication.getName());
+
             pagina = (estado != null)
-                    ? solicitudRepository.findByClienteIdUsuarioAndEstadoNombreEstado(idCliente, estado, pageable)
-                    : solicitudRepository.findByClienteIdUsuario(idCliente, pageable);
+                    ? solicitudRepository
+                    .findByClienteIdUsuarioAndEstadoNombreEstado(
+                            idCliente,
+                            estado,
+                            pageable
+                    )
+                    : solicitudRepository
+                    .findByClienteIdUsuario(
+                            idCliente,
+                            pageable
+                    );
         }
 
-        return ResponseEntity.ok(pagina.map(SolicitudResponse::fromEntity));
+        return ResponseEntity.ok(
+                pagina.map(SolicitudResponse::fromEntity)
+        );
     }
 
     /**
-     * Tecnico: "Mis tareas" (caso de uso 4.2.2) - solicitudes asignadas a el
-     * o a su grupo, ordenadas por prioridad.
+     * Tecnico:
+     * lista las solicitudes asignadas directamente al técnico
+     * o a alguno de sus grupos.
      */
     @GetMapping("/mis-tareas")
-    public ResponseEntity<Page<SolicitudResponse>> misTareas(@PageableDefault(size = 20) Pageable pageable,
-                                                               Authentication authentication) {
+    public ResponseEntity<Page<SolicitudResponse>> misTareas(
+            @PageableDefault(size = 20) Pageable pageable,
+            Authentication authentication) {
 
-        Long idTecnico = Long.valueOf(authentication.getName());
-        Page<Solicitud> pagina = solicitudRepository.findMisTareas(idTecnico, pageable);
+        Long idTecnico =
+                Long.valueOf(authentication.getName());
 
-        return ResponseEntity.ok(pagina.map(SolicitudResponse::fromEntity));
+        Page<Solicitud> pagina =
+                solicitudRepository.findMisTareas(
+                        idTecnico,
+                        pageable
+                );
+
+        return ResponseEntity.ok(
+                pagina.map(SolicitudResponse::fromEntity)
+        );
     }
 
-    private boolean tieneRol(Authentication authentication, String rol) {
+    /**
+     * Cliente confirma o rechaza la solución del ticket.
+     *
+     * Si confirma:
+     * el ticket puede cerrarse.
+     *
+     * Si indica que el problema persiste:
+     * la solicitud vuelve a proceso.
+     */
+    @PostMapping("/{id}/confirmacion")
+    @Transactional
+    public ResponseEntity<SolicitudResponse> confirmar(
+            @PathVariable Long id,
+            @Valid @RequestBody ConfirmarClienteRequest request,
+            Authentication authentication) {
+
+        Long idCliente =
+                Long.valueOf(authentication.getName());
+
+        solicitudRepository.confirmarCliente(
+                id,
+                idCliente,
+                request.getProblemaResuelto()
+        );
+
+        Solicitud actualizada =
+                solicitudRepository.findById(id)
+                        .orElseThrow(() ->
+                                new IllegalStateException(
+                                        "La solicitud se confirmo "
+                                                + "pero no se pudo recuperar "
+                                                + "(id=" + id + ")"
+                                )
+                        );
+
+        return ResponseEntity.ok(
+                SolicitudResponse.fromEntity(actualizada)
+        );
+    }
+
+    /**
+     * Comprueba si el usuario autenticado posee un rol determinado.
+     */
+    private boolean tieneRol(
+            Authentication authentication,
+            String rol) {
+
         String authority = "ROLE_" + rol;
-        for (GrantedAuthority ga : authentication.getAuthorities()) {
+
+        for (GrantedAuthority ga :
+                authentication.getAuthorities()) {
+
             if (ga.getAuthority().equals(authority)) {
                 return true;
             }
         }
+
         return false;
-    }
-
-    /**
-     * Cliente confirma o rechaza la solucion de su ticket, una vez que esta
-     * "Resuelta - Pendiente Confirmacion del Cliente" (seccion 3.1 del
-     * documento). Si confirma, el ticket se cierra; si indica que el
-     * problema persiste, se reabre y vuelve a "En Proceso". idCliente sale
-     * del JWT; sp_confirmar_cliente ademas valida que sea el dueno real de
-     * la solicitud.
-     */
-    @PostMapping("/{id}/confirmacion")
-    @Transactional
-    public ResponseEntity<SolicitudResponse> confirmar(@PathVariable Long id,
-                                                          @Valid @RequestBody ConfirmarClienteRequest request,
-                                                          Authentication authentication) {
-
-        Long idCliente = Long.valueOf(authentication.getName());
-
-        solicitudRepository.confirmarCliente(id, idCliente, request.getProblemaResuelto());
-
-        Solicitud actualizada = solicitudRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException(
-                        "La solicitud se confirmo pero no se pudo recuperar (id=" + id + ")"));
-
-        return ResponseEntity.ok(SolicitudResponse.fromEntity(actualizada));
     }
 }
