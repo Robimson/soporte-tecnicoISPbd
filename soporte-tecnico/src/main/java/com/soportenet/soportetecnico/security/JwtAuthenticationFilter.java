@@ -1,5 +1,8 @@
 package com.soportenet.soportetecnico.security;
 
+import com.soportenet.soportetecnico.entity.Usuario;
+import com.soportenet.soportetecnico.enums.EstadoCuenta;
+import com.soportenet.soportetecnico.repository.UsuarioRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -14,47 +17,152 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Lee el header "Authorization: Bearer <token>", valida el JWT y deja al
- * usuario autenticado en el SecurityContext. El subject del token es el
- * id_usuario (como String) y el claim "rol" se mapea a un authority
- * "ROLE_<ROL>" para que SecurityConfig pueda usar hasRole(...).
- * Si el token falta o es invalido, simplemente no autentica: es
- * SecurityConfig quien decide si ese endpoint exige login o no.
+ * Valida el JWT enviado en:
+ *
+ * Authorization: Bearer <token>
+ *
+ * Ademas de validar firma y expiracion del token,
+ * comprueba en PostgreSQL que el usuario:
+ *
+ * - siga existiendo
+ * - tenga la cuenta activa
+ *
+ * El rol se obtiene de la base de datos y no se confia
+ * exclusivamente en el rol almacenado dentro del JWT.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UsuarioRepository usuarioRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            UsuarioRepository usuarioRepository
+    ) {
         this.jwtService = jwtService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                     HttpServletResponse response,
-                                     FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring("Bearer ".length());
-
-            try {
-                Claims claims = jwtService.validarYObtenerClaims(token);
-                String idUsuario = claims.getSubject();
-                String rol = claims.get("rol", String.class);
-
-                var authority = new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase());
-                var authentication = new UsernamePasswordAuthenticationToken(idUsuario, null, List.of(authority));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (JwtException | IllegalArgumentException ex) {
-                SecurityContextHolder.clearContext();
-            }
+        /*
+         * Si no existe Bearer token, continuamos sin autenticar.
+         * SecurityConfig decidira si la ruta permite o no el acceso.
+         */
+        if (header == null || !header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        filterChain.doFilter(request, response);
+        String token = header.substring("Bearer ".length()).trim();
+
+        if (token.isEmpty()) {
+            SecurityContextHolder.clearContext();
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+
+            /*
+             * Comprueba firma, estructura y expiracion.
+             */
+            Claims claims =
+                    jwtService.validarYObtenerClaims(token);
+
+            String subject =
+                    claims.getSubject();
+
+            if (subject == null || subject.isBlank()) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            Long idUsuario =
+                    Long.valueOf(subject);
+
+            /*
+             * Comprobacion contra la base de datos.
+             *
+             * Esto permite invalidar inmediatamente el acceso
+             * de un usuario suspendido o desactivado aunque
+             * conserve un JWT que todavia no haya expirado.
+             */
+            Optional<Usuario> usuarioOpt =
+                    usuarioRepository.findById(idUsuario);
+
+            if (usuarioOpt.isEmpty()) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            Usuario usuario =
+                    usuarioOpt.get();
+
+            /*
+             * Solamente cuentas activas pueden autenticarse.
+             */
+            if (usuario.getEstadoCuenta() != EstadoCuenta.activo) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            /*
+             * Utilizamos el rol ACTUAL de PostgreSQL.
+             *
+             * No dependemos del claim "rol" del token para
+             * decidir los permisos.
+             */
+            String rol =
+                    usuario.getRol()
+                            .name()
+                            .toUpperCase();
+
+            SimpleGrantedAuthority authority =
+                    new SimpleGrantedAuthority(
+                            "ROLE_" + rol
+                    );
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            idUsuario.toString(),
+                            null,
+                            List.of(authority)
+                    );
+
+            SecurityContextHolder
+                    .getContext()
+                    .setAuthentication(authentication);
+
+        } catch (
+                JwtException
+                | IllegalArgumentException ex
+        ) {
+
+            /*
+             * Token vencido, corrupto, firma invalida,
+             * subject incorrecto, etc.
+             */
+            SecurityContextHolder.clearContext();
+        }
+
+        filterChain.doFilter(
+                request,
+                response
+        );
     }
 }
