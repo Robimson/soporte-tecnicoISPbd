@@ -110,8 +110,7 @@ public class SecurityConfig {
                 )
 
                 /*
-                 * API REST con JWT:
-                 * no utilizamos sesiones ni formularios tradicionales.
+                 * API REST con JWT.
                  */
                 .csrf(csrf ->
                         csrf.disable()
@@ -173,39 +172,39 @@ public class SecurityConfig {
                         .hasRole("SUPERUSUARIO")
 
 
-                                /*
-                                 * =====================================================
-                                 * GRUPOS TECNICOS
-                                 * =====================================================
-                                 */
+                        /*
+                         * =====================================================
+                         * GRUPOS TECNICOS
+                         * =====================================================
+                         */
 
-                                /*
-                                 * Superusuario crea grupos y administra miembros.
-                                 */
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/api/grupos-tecnicos/**"
-                                )
-                                .hasRole("SUPERUSUARIO")
+                        /*
+                         * Superusuario crea grupos y administra miembros.
+                         */
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/grupos-tecnicos/**"
+                        )
+                        .hasRole("SUPERUSUARIO")
 
-                                .requestMatchers(
-                                        HttpMethod.DELETE,
-                                        "/api/grupos-tecnicos/**"
-                                )
-                                .hasRole("SUPERUSUARIO")
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/grupos-tecnicos/**"
+                        )
+                        .hasRole("SUPERUSUARIO")
 
-                                /*
-                                 * Superusuario administra los grupos.
-                                 * Administrador necesita consultarlos para asignar tickets.
-                                 */
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/api/grupos-tecnicos"
-                                )
-                                .hasAnyRole(
-                                        "SUPERUSUARIO",
-                                        "ADMINISTRADOR"
-                                )
+                        /*
+                         * Superusuario administra los grupos.
+                         * Administrador necesita consultarlos para asignar tickets.
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/grupos-tecnicos"
+                        )
+                        .hasAnyRole(
+                                "SUPERUSUARIO",
+                                "ADMINISTRADOR"
+                        )
 
 
                         /*
@@ -234,9 +233,6 @@ public class SecurityConfig {
 
                         /*
                          * Tecnico consulta sus tareas.
-                         *
-                         * Esta regla debe aparecer antes de
-                         * /api/solicitudes/*.
                          */
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -264,14 +260,6 @@ public class SecurityConfig {
 
                         /*
                          * Lista general de solicitudes.
-                         *
-                         * Cliente:
-                         * solo las suyas.
-                         *
-                         * Administrador/Superusuario:
-                         * todas.
-                         *
-                         * Tecnico debe usar /mis-tareas.
                          */
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -285,9 +273,6 @@ public class SecurityConfig {
 
                         /*
                          * Consulta individual.
-                         *
-                         * El controlador comprueba despues
-                         * si el usuario puede acceder a ESE recurso.
                          */
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -336,9 +321,6 @@ public class SecurityConfig {
 
                         /*
                          * Consulta individual de reporte.
-                         *
-                         * ReporteController comprueba posteriormente
-                         * la pertenencia/asignacion del recurso.
                          */
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -354,22 +336,78 @@ public class SecurityConfig {
 
                         /*
                          * =====================================================
+                         * CATALOGOS
+                         * =====================================================
+                         */
+
+                        /*
+                         * Categorias:
+                         * Cliente las necesita para crear solicitudes.
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/categorias"
+                        )
+                        .hasAnyRole(
+                                "CLIENTE",
+                                "ADMINISTRADOR",
+                                "SUPERUSUARIO"
+                        )
+
+                        /*
+                         * Prioridades:
+                         * usadas principalmente durante asignacion.
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/prioridades"
+                        )
+                        .hasAnyRole(
+                                "ADMINISTRADOR",
+                                "SUPERUSUARIO"
+                        )
+
+                        /*
+                         * Estados:
+                         * utilizados para filtros y visualizacion.
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/estados"
+                        )
+                        .hasAnyRole(
+                                "CLIENTE",
+                                "TECNICO",
+                                "ADMINISTRADOR",
+                                "SUPERUSUARIO"
+                        )
+
+                        /*
+                         * Tecnicos disponibles para asignacion.
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/tecnicos"
+                        )
+                        .hasAnyRole(
+                                "ADMINISTRADOR",
+                                "SUPERUSUARIO"
+                        )
+
+
+                        /*
+                         * =====================================================
                          * RESTO DE ENDPOINTS
                          * =====================================================
                          *
                          * Por ahora requieren autenticacion.
-                         *
-                         * Posteriormente revisaremos los otros
-                         * controladores para eliminar progresivamente
-                         * esta regla generica.
                          */
                         .anyRequest()
                         .authenticated()
                 )
 
                 /*
-                 * Nuestro filtro JWT debe ejecutarse antes
-                 * del filtro estandar de autenticacion.
+                 * Filtro JWT.
                  */
                 .addFilterBefore(
                         jwtAuthenticationFilter,
