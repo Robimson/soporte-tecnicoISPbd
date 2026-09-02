@@ -60,9 +60,11 @@
 
             document.getElementById('form-invitar').reset();
             tokenGenerado.innerHTML =
-                'Invitación creada para <strong>' + escaparHtml(respuesta.correo) + '</strong>. ' +
-                'Como todavía no hay envío de correo real, copia este token y pásaselo a la persona ' +
-                'para que active su cuenta en <em>activar.html</em>:<br><br>' + escaparHtml(respuesta.token);
+                'Invitación enviada correctamente a <strong>' +
+                escaparHtml(respuesta.correo) +
+                '</strong>. ' +
+                'La persona recibirá un correo con el enlace para activar su cuenta.';
+
             tokenGenerado.classList.remove('oculto');
 
             cargarUsuarios();

@@ -1,80 +1,494 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis solicitudes — SoporteNet</title>
-    <link rel="stylesheet" href="../css/estilos.css">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Panel del Cliente — SoporteNet</title>
+
+    <link rel="stylesheet"
+          href="../css/estilos.css">
 </head>
+
 <body>
-    <div class="app-shell">
-        <aside class="sidebar">
-            <div class="sidebar-marca"><span class="logo"><img src="../css/logo.png" alt="SoporteNet"></span> SoporteNet</div>
-            <span class="sidebar-rol">Cliente</span>
-            <nav class="sidebar-nav">
-                <a href="#resumen">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                    Resumen
-                </a>
-                <a href="#nueva-solicitud">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
-                    Nueva solicitud
-                </a>
-                <a href="#mis-solicitudes">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-                    Mis solicitudes
-                </a>
-            </nav>
-            <div class="sidebar-pie">
-                <span class="id-usuario" id="texto-usuario"></span>
-                <button class="secundario" onclick="cerrarSesion()">Cerrar sesión</button>
-            </div>
-        </aside>
 
-        <main class="contenido-principal">
-            <h1>Mis solicitudes</h1>
+<div class="app-shell">
 
-            <div class="seccion" id="resumen">
-                <div class="fila-metricas" id="fila-metricas"></div>
-            </div>
+    <!-- ====================================================== -->
+    <!-- BARRA LATERAL -->
+    <!-- ====================================================== -->
 
-            <div class="seccion tarjeta" id="nueva-solicitud">
-                <h2>Nueva solicitud</h2>
-                <div id="mensaje-error-crear" class="mensaje-error oculto"></div>
-                <form id="form-crear">
-                    <div class="campo">
-                        <label for="descripcion">Descripción del problema</label>
-                        <textarea id="descripcion" required placeholder="Describe qué está pasando..."></textarea>
-                    </div>
-                    <div class="campo" style="max-width: 300px;">
-                        <label for="categoria">Categoría (opcional)</label>
-                        <select id="categoria">
-                            <option value="">Sin especificar</option>
-                        </select>
-                    </div>
-                    <button type="submit" id="btn-crear">Crear solicitud</button>
-                </form>
-            </div>
+    <aside class="sidebar">
 
-            <div class="seccion" id="mis-solicitudes">
-                <h2>Mis solicitudes</h2>
-                <div class="fila-filtros">
-                    <div class="campo">
-                        <label for="filtro-estado">Filtrar por estado</label>
-                        <select id="filtro-estado">
-                            <option value="">Todas</option>
-                        </select>
-                    </div>
+        <!-- MARCA -->
+
+        <div class="sidebar-marca">
+
+            <span class="logo">
+
+                <img
+                        src="../css/logo.png"
+                        alt="SoporteNet"
+                >
+
+            </span>
+
+            <span>SoporteNet</span>
+
+        </div>
+
+
+        <!-- ROL -->
+
+        <span class="sidebar-rol">
+            Cliente
+        </span>
+
+
+        <!-- NAVEGACIÓN -->
+
+        <nav class="sidebar-nav">
+
+            <!-- RESUMEN -->
+
+            <a href="#resumen">
+
+                <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+
+                    <rect
+                            x="3"
+                            y="3"
+                            width="7"
+                            height="7"
+                            rx="1">
+                    </rect>
+
+                    <rect
+                            x="14"
+                            y="3"
+                            width="7"
+                            height="7"
+                            rx="1">
+                    </rect>
+
+                    <rect
+                            x="3"
+                            y="14"
+                            width="7"
+                            height="7"
+                            rx="1">
+                    </rect>
+
+                    <rect
+                            x="14"
+                            y="14"
+                            width="7"
+                            height="7"
+                            rx="1">
+                    </rect>
+
+                </svg>
+
+                <span>Resumen</span>
+
+            </a>
+
+
+            <!-- NUEVA SOLICITUD -->
+
+            <a href="#nueva-solicitud">
+
+                <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+
+                    <circle
+                            cx="12"
+                            cy="12"
+                            r="9">
+                    </circle>
+
+                    <path d="M12 8v8"></path>
+
+                    <path d="M8 12h8"></path>
+
+                </svg>
+
+                <span>Nueva solicitud</span>
+
+            </a>
+
+
+            <!-- MIS SOLICITUDES -->
+
+            <a href="#mis-solicitudes">
+
+                <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+
+                    <path d="M4 6h16"></path>
+
+                    <path d="M4 12h16"></path>
+
+                    <path d="M4 18h10"></path>
+
+                </svg>
+
+                <span>Mis solicitudes</span>
+
+            </a>
+
+        </nav>
+
+
+        <!-- ================================================== -->
+        <!-- PIE DE LA BARRA -->
+        <!-- ================================================== -->
+
+        <div class="sidebar-pie">
+
+            <span
+                    class="id-usuario"
+                    id="texto-usuario">
+            </span>
+
+
+            <button
+                    type="button"
+                    class="secundario"
+                    onclick="cerrarSesion()">
+
+                Cerrar sesión
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ====================================================== -->
+    <!-- CONTENIDO PRINCIPAL -->
+    <!-- ====================================================== -->
+
+    <main class="contenido-principal">
+
+        <h1>Panel del cliente</h1>
+
+
+        <!-- ================================================== -->
+        <!-- RESUMEN -->
+        <!-- ================================================== -->
+
+        <section
+                class="seccion"
+                id="resumen">
+
+            <div class="cabecera-seccion">
+
+                <div>
+
+                    <h2>Resumen</h2>
+
+                    <p>
+                        Consulta el estado general de tus solicitudes.
+                    </p>
+
                 </div>
 
-                <div id="mensaje-error-lista" class="mensaje-error oculto"></div>
-                <div id="contenedor-tabla"></div>
-                <div class="paginacion" id="paginacion"></div>
             </div>
-        </main>
-    </div>
 
-    <script src="../js/api.js"></script>
-    <script src="../js/cliente.js"></script>
+
+            <!-- MÉTRICAS -->
+
+            <div
+                    class="fila-metricas"
+                    id="fila-metricas">
+
+                <div class="tarjeta-metrica">
+
+                    <div class="valor">
+                        —
+                    </div>
+
+                    <div class="etiqueta">
+                        Pendientes
+                    </div>
+
+                </div>
+
+
+                <div class="tarjeta-metrica">
+
+                    <div class="valor">
+                        —
+                    </div>
+
+                    <div class="etiqueta">
+                        En proceso
+                    </div>
+
+                </div>
+
+
+                <div class="tarjeta-metrica">
+
+                    <div class="valor">
+                        —
+                    </div>
+
+                    <div class="etiqueta">
+                        Cerradas
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================== -->
+        <!-- NUEVA SOLICITUD -->
+        <!-- ================================================== -->
+
+        <section
+                class="seccion tarjeta"
+                id="nueva-solicitud">
+
+            <div class="cabecera-seccion">
+
+                <div>
+
+                    <h2>Nueva solicitud</h2>
+
+                    <p>
+                        Describe el problema que necesitas solucionar.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <div
+                    id="mensaje-error-crear"
+                    class="mensaje-error oculto">
+            </div>
+
+
+            <!-- ÉXITO -->
+
+            <div
+                    id="mensaje-exito-crear"
+                    class="mensaje-info oculto">
+            </div>
+
+
+            <!-- FORMULARIO -->
+
+            <form id="form-crear">
+
+
+                <!-- DESCRIPCIÓN -->
+
+                <div class="campo">
+
+                    <label for="descripcion">
+                        Descripción del problema
+                    </label>
+
+                    <textarea
+                            id="descripcion"
+                            name="descripcion"
+                            required
+                            rows="6"
+                            placeholder="Describe qué está pasando, qué equipo presenta el problema y cualquier detalle que pueda ayudar al técnico...">
+                    </textarea>
+
+                </div>
+
+
+                <!-- CATEGORÍA -->
+
+                <div
+                        class="campo"
+                        style="max-width: 350px;">
+
+                    <label for="categoria">
+                        Categoría
+                    </label>
+
+                    <select id="categoria"
+                            name="categoria">
+
+                        <option value="">
+                            Sin especificar
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- EVIDENCIA -->
+
+                <div class="campo">
+
+                    <label for="evidencia">
+                        Evidencia
+                    </label>
+
+                    <input
+                            type="file"
+                            id="evidencia"
+                            name="evidencia"
+                            accept="image/*,.pdf"
+                    >
+
+                    <small>
+                        Puedes adjuntar una imagen o un archivo PDF.
+                        Tamaño máximo: 10 MB.
+                    </small>
+
+                </div>
+
+
+                <!-- BOTÓN -->
+
+                <div class="acciones-formulario">
+
+                    <button
+                            type="submit"
+                            id="btn-crear">
+
+                        Crear solicitud
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- ================================================== -->
+        <!-- MIS SOLICITUDES -->
+        <!-- ================================================== -->
+
+        <section
+                class="seccion"
+                id="mis-solicitudes">
+
+            <div class="cabecera-seccion">
+
+                <div>
+
+                    <h2>Mis solicitudes</h2>
+
+                    <p>
+                        Consulta tus solicitudes y revisa su estado.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- FILTRO -->
+
+            <div class="fila-filtros">
+
+                <div
+                        class="campo"
+                        style="max-width: 300px;">
+
+                    <label for="filtro-estado">
+                        Filtrar por estado
+                    </label>
+
+                    <select id="filtro-estado">
+
+                        <option value="">
+                            Todas
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ERROR DE LISTA -->
+
+            <div
+                    id="mensaje-error-lista"
+                    class="mensaje-error oculto">
+            </div>
+
+
+            <!-- TABLA -->
+
+            <div id="contenedor-tabla">
+
+                <div class="estado-cargando">
+
+                    <span class="spinner"></span>
+
+                    Cargando solicitudes...
+
+                </div>
+
+            </div>
+
+
+            <!-- PAGINACIÓN -->
+
+            <div
+                    class="paginacion"
+                    id="paginacion">
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ========================================================== -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================== -->
+
+<!-- IMPORTANTE:
+     api.js debe cargarse ANTES que cliente.js -->
+
+<script src="../js/api.js"></script>
+
+<script src="../js/cliente.js"></script>
+
 </body>
+
 </html>

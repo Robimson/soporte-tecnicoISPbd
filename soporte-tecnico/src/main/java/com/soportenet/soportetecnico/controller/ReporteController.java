@@ -11,6 +11,7 @@ import com.soportenet.soportetecnico.repository.SolicitudRepository;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -178,7 +179,14 @@ public class ReporteController {
     /**
      * Administrador:
      * lista reportes filtrados por estado de aprobacion.
-     * Sin filtro devuelve todos.
+     *
+     * Si se envia un estado:
+     * devuelve solamente los reportes de ese estado.
+     *
+     * Si no se envia estado:
+     * devuelve todos los reportes.
+     *
+     * Los reportes mas recientes aparecen primero.
      */
     @GetMapping("/api/reportes")
     public ResponseEntity<Page<ReporteResponse>> listar(
@@ -186,8 +194,9 @@ public class ReporteController {
             EstadoAprobacion estado,
 
             @PageableDefault(
-                    size = 20,
-                    sort = "fechaEnvio"
+                    size = 10,
+                    sort = "fechaEnvio",
+                    direction = Sort.Direction.DESC
             )
             Pageable pageable
     ) {
@@ -239,7 +248,8 @@ public class ReporteController {
                                 new IllegalStateException(
                                         "El reporte se aprobo pero no "
                                                 + "se pudo recuperar (id="
-                                                + id + ")"
+                                                + id
+                                                + ")"
                                 )
                         );
 
@@ -275,7 +285,8 @@ public class ReporteController {
                                 new IllegalStateException(
                                         "El reporte se rechazo pero no "
                                                 + "se pudo recuperar (id="
-                                                + id + ")"
+                                                + id
+                                                + ")"
                                 )
                         );
 

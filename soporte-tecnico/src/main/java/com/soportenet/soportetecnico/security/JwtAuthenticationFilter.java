@@ -19,20 +19,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Valida el JWT enviado en:
- *
- * Authorization: Bearer <token>
- *
- * Ademas de validar firma y expiracion del token,
- * comprueba en PostgreSQL que el usuario:
- *
- * - siga existiendo
- * - tenga la cuenta activa
- *
- * El rol se obtiene de la base de datos y no se confia
- * exclusivamente en el rol almacenado dentro del JWT.
- */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -54,38 +40,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
+        SecurityContextHolder.clearContext();
 
-        /*
-         * Si no existe Bearer token, continuamos sin autenticar.
-         * SecurityConfig decidira si la ruta permite o no el acceso.
-         */
-        if (header == null || !header.startsWith("Bearer ")) {
+        String header =
+                request.getHeader("Authorization");
+
+        if (header == null ||
+                !header.startsWith("Bearer ")) {
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = header.substring("Bearer ".length()).trim();
+        String token =
+                header.substring(7).trim();
 
         if (token.isEmpty()) {
-            SecurityContextHolder.clearContext();
+
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
 
-            /*
-             * Comprueba firma, estructura y expiracion.
-             */
             Claims claims =
                     jwtService.validarYObtenerClaims(token);
 
             String subject =
                     claims.getSubject();
 
-            if (subject == null || subject.isBlank()) {
-                SecurityContextHolder.clearContext();
+            if (subject == null ||
+                    subject.isBlank()) {
+
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -93,18 +79,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Long idUsuario =
                     Long.valueOf(subject);
 
-            /*
-             * Comprobacion contra la base de datos.
-             *
-             * Esto permite invalidar inmediatamente el acceso
-             * de un usuario suspendido o desactivado aunque
-             * conserve un JWT que todavia no haya expirado.
-             */
             Optional<Usuario> usuarioOpt =
                     usuarioRepository.findById(idUsuario);
 
             if (usuarioOpt.isEmpty()) {
-                SecurityContextHolder.clearContext();
+
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -112,21 +91,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Usuario usuario =
                     usuarioOpt.get();
 
-            /*
-             * Solamente cuentas activas pueden autenticarse.
-             */
-            if (usuario.getEstadoCuenta() != EstadoCuenta.activo) {
-                SecurityContextHolder.clearContext();
+            if (usuario.getEstadoCuenta()
+                    != EstadoCuenta.activo) {
+
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            /*
-             * Utilizamos el rol ACTUAL de PostgreSQL.
-             *
-             * No dependemos del claim "rol" del token para
-             * decidir los permisos.
-             */
+            if (usuario.getRol() == null) {
+
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             String rol =
                     usuario.getRol()
                             .name()
@@ -148,16 +125,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .getContext()
                     .setAuthentication(authentication);
 
+            System.out.println(
+                    "JWT OK -> usuario=" +
+                            idUsuario +
+                            " rol=ROLE_" +
+                            rol +
+                            " metodo=" +
+                            request.getMethod() +
+                            " ruta=" +
+                            request.getRequestURI()
+            );
+
         } catch (
-                JwtException
-                | IllegalArgumentException ex
+                JwtException |
+                IllegalArgumentException ex
         ) {
 
-            /*
-             * Token vencido, corrupto, firma invalida,
-             * subject incorrecto, etc.
-             */
             SecurityContextHolder.clearContext();
+
+            System.out.println(
+                    "JWT INVALIDO -> " +
+                            ex.getMessage()
+            );
         }
 
         filterChain.doFilter(

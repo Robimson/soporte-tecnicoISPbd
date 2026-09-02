@@ -3,6 +3,7 @@ package com.soportenet.soportetecnico.controller;
 import com.soportenet.soportetecnico.entity.Cliente;
 import com.soportenet.soportetecnico.entity.Solicitud;
 import com.soportenet.soportetecnico.repository.SolicitudRepository;
+import com.soportenet.soportetecnico.service.AdjuntoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,12 +22,20 @@ import static org.mockito.Mockito.when;
 class SolicitudControllerTest {
 
     private SolicitudRepository solicitudRepository;
+    private AdjuntoService adjuntoService;
     private SolicitudController solicitudController;
 
     @BeforeEach
     void configurar() {
+
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
-        solicitudController = new SolicitudController(solicitudRepository);
+
+        adjuntoService = Mockito.mock(AdjuntoService.class);
+
+        solicitudController = new SolicitudController(
+                solicitudRepository,
+                adjuntoService
+        );
     }
 
     @Test
@@ -246,4 +255,3 @@ class SolicitudControllerTest {
         );
     }
 }
-

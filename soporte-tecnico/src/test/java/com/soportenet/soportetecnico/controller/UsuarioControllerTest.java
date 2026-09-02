@@ -9,6 +9,7 @@ import com.soportenet.soportetecnico.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,7 @@ class UsuarioControllerTest {
 
     private UsuarioRepository usuarioRepository;
     private PasswordEncoder passwordEncoder;
+    private JavaMailSender mailSender;
     private UsuarioController usuarioController;
 
     @BeforeEach
@@ -34,10 +36,14 @@ class UsuarioControllerTest {
         passwordEncoder =
                 Mockito.mock(PasswordEncoder.class);
 
+        mailSender =
+                Mockito.mock(JavaMailSender.class);
+
         usuarioController =
                 new UsuarioController(
                         usuarioRepository,
-                        passwordEncoder
+                        passwordEncoder,
+                        mailSender
                 );
     }
 
@@ -169,10 +175,6 @@ class UsuarioControllerTest {
         CambiarEstadoCuentaRequest request =
                 new CambiarEstadoCuentaRequest();
 
-        /*
-         * Si esta linea aparece en rojo, dime los valores
-         * exactos de tu enum EstadoCuenta y la adaptamos.
-         */
         request.setEstadoCuenta(
                 com.soportenet.soportetecnico.enums.EstadoCuenta.activo
         );

@@ -17,41 +17,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Configuracion principal de seguridad.
- *
- * La autenticacion es Stateless mediante JWT.
- *
- * SecurityConfig controla el acceso general por rol.
- * Los controladores y procedimientos SQL realizan
- * las validaciones adicionales sobre el recurso:
- *
- * - Cliente solo puede acceder a sus propias solicitudes.
- * - Tecnico solo puede acceder a solicitudes asignadas.
- * - Cliente solo puede consultar reportes de sus solicitudes.
- * - Tecnico solo puede consultar reportes de solicitudes asignadas.
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /**
-     * Codificador utilizado para almacenar y comprobar contrasenas.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Configuracion CORS.
-     *
-     * Durante desarrollo permitimos cualquier origen para facilitar
-     * las pruebas desde frontend local.
-     *
-     * En produccion se recomienda reemplazar "*" por los dominios
-     * reales permitidos.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -77,6 +51,8 @@ public class SecurityConfig {
                 List.of("*")
         );
 
+        configuracion.setAllowCredentials(false);
+
         UrlBasedCorsConfigurationSource fuente =
                 new UrlBasedCorsConfigurationSource();
 
@@ -88,9 +64,6 @@ public class SecurityConfig {
         return fuente;
     }
 
-    /**
-     * Cadena principal de seguridad.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -99,316 +72,173 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
-
-                /*
-                 * CORS.
-                 */
                 .cors(cors ->
                         cors.configurationSource(
                                 corsConfigurationSource
                         )
                 )
 
-                /*
-                 * API REST con JWT.
-                 */
                 .csrf(csrf ->
                         csrf.disable()
                 )
 
-                /*
-                 * JWT Stateless.
-                 */
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-                /*
-                 * Reglas de autorizacion.
-                 */
                 .authorizeHttpRequests(auth -> auth
 
-                        /*
-                         * =====================================================
-                         * AUTENTICACION
-                         * =====================================================
-                         */
+                        // =================================================
+                        // LOGIN / AUTENTICACIÓN
+                        // =================================================
 
                         .requestMatchers(
                                 "/api/auth/**"
-                        )
-                        .permitAll()
+                        ).permitAll()
+
+
+                        // =================================================
+                        // ARCHIVOS DEL FRONTEND
+                        // =================================================
 
                         .requestMatchers(
+                                "/activar.html",
+                                "/login.html",
+                                "/admin.html",
+                                "/cliente.html",
+                                "/superusuario.html",
+                                "/tecnico.html",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/favicon.ico"
+                        ).permitAll()
+
+
+                        // =================================================
+                        // CORS PREFLIGHT
+                        // =================================================
+
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+
+
+                        // =================================================
+                        // ACTIVACIÓN
+                        // =================================================
+
+                        .requestMatchers(
+                                HttpMethod.POST,
                                 "/api/usuarios/activacion"
+                        ).permitAll()
+
+
+                        // =================================================
+                        // SOLICITUDES - CLIENTE
+                        // =================================================
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/solicitudes"
+                        ).hasRole("CLIENTE")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/solicitudes"
+                        ).hasAnyRole(
+                                "CLIENTE",
+                                "TECNICO",
+                                "ADMINISTRADOR",
+                                "SUPERUSUARIO"
                         )
-                        .permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/solicitudes/*"
+                        ).hasAnyRole(
+                                "CLIENTE",
+                                "TECNICO",
+                                "ADMINISTRADOR",
+                                "SUPERUSUARIO"
+                        )
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/solicitudes/*/adjuntos"
+                        ).hasAnyRole(
+                                "CLIENTE",
+                                "TECNICO",
+                                "ADMINISTRADOR",
+                                "SUPERUSUARIO"
+                        )
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/solicitudes/*/confirmacion"
+                        ).hasRole("CLIENTE")
 
 
-                        /*
-                         * =====================================================
-                         * USUARIOS
-                         * =====================================================
-                         */
+                        // =================================================
+                        // MIS TAREAS
+                        // =================================================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/solicitudes/mis-tareas"
+                        ).hasRole("TECNICO")
+
+
+                        // =================================================
+                        // CATEGORÍAS
+                        // =================================================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/categorias/**"
+                        ).authenticated()
+
+
+                        // =================================================
+                        // ESTADOS
+                        // =================================================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/estados/**"
+                        ).authenticated()
+
+
+                        // =================================================
+                        // USUARIOS
+                        // =================================================
 
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/usuarios/invitaciones"
-                        )
-                        .hasRole("SUPERUSUARIO")
+                        ).hasRole("SUPERUSUARIO")
 
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/usuarios/*/estado"
-                        )
-                        .hasRole("SUPERUSUARIO")
+                        ).hasRole("SUPERUSUARIO")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/usuarios"
-                        )
-                        .hasRole("SUPERUSUARIO")
+                        ).hasRole("SUPERUSUARIO")
 
 
-                        /*
-                         * =====================================================
-                         * GRUPOS TECNICOS
-                         * =====================================================
-                         */
+                        // =================================================
+                        // RESTO DE LA API
+                        // =================================================
 
-                        /*
-                         * Superusuario crea grupos y administra miembros.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/grupos-tecnicos/**"
-                        )
-                        .hasRole("SUPERUSUARIO")
-
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/api/grupos-tecnicos/**"
-                        )
-                        .hasRole("SUPERUSUARIO")
-
-                        /*
-                         * Superusuario administra los grupos.
-                         * Administrador necesita consultarlos para asignar tickets.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/grupos-tecnicos"
-                        )
-                        .hasAnyRole(
-                                "SUPERUSUARIO",
-                                "ADMINISTRADOR"
-                        )
-
-
-                        /*
-                         * =====================================================
-                         * SOLICITUDES
-                         * =====================================================
-                         */
-
-                        /*
-                         * Cliente crea una solicitud.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/solicitudes"
-                        )
-                        .hasRole("CLIENTE")
-
-                        /*
-                         * Cliente confirma la solucion.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/solicitudes/*/confirmacion"
-                        )
-                        .hasRole("CLIENTE")
-
-                        /*
-                         * Tecnico consulta sus tareas.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/solicitudes/mis-tareas"
-                        )
-                        .hasRole("TECNICO")
-
-                        /*
-                         * Administrador asigna solicitudes.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/solicitudes/*/asignaciones"
-                        )
-                        .hasRole("ADMINISTRADOR")
-
-                        /*
-                         * Tecnico envia reporte.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/solicitudes/*/reportes"
-                        )
-                        .hasRole("TECNICO")
-
-                        /*
-                         * Lista general de solicitudes.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/solicitudes"
-                        )
-                        .hasAnyRole(
-                                "CLIENTE",
-                                "ADMINISTRADOR",
-                                "SUPERUSUARIO"
-                        )
-
-                        /*
-                         * Consulta individual.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/solicitudes/*"
-                        )
-                        .hasAnyRole(
-                                "CLIENTE",
-                                "TECNICO",
-                                "ADMINISTRADOR",
-                                "SUPERUSUARIO"
-                        )
-
-
-                        /*
-                         * =====================================================
-                         * REPORTES
-                         * =====================================================
-                         */
-
-                        /*
-                         * Administrador lista reportes.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/reportes"
-                        )
-                        .hasRole("ADMINISTRADOR")
-
-                        /*
-                         * Administrador aprueba reporte.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/reportes/*/aprobacion"
-                        )
-                        .hasRole("ADMINISTRADOR")
-
-                        /*
-                         * Administrador rechaza reporte.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/reportes/*/rechazo"
-                        )
-                        .hasRole("ADMINISTRADOR")
-
-                        /*
-                         * Consulta individual de reporte.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/reportes/*"
-                        )
-                        .hasAnyRole(
-                                "CLIENTE",
-                                "TECNICO",
-                                "ADMINISTRADOR",
-                                "SUPERUSUARIO"
-                        )
-
-
-                        /*
-                         * =====================================================
-                         * CATALOGOS
-                         * =====================================================
-                         */
-
-                        /*
-                         * Categorias:
-                         * Cliente las necesita para crear solicitudes.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/categorias"
-                        )
-                        .hasAnyRole(
-                                "CLIENTE",
-                                "ADMINISTRADOR",
-                                "SUPERUSUARIO"
-                        )
-
-                        /*
-                         * Prioridades:
-                         * usadas principalmente durante asignacion.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/prioridades"
-                        )
-                        .hasAnyRole(
-                                "ADMINISTRADOR",
-                                "SUPERUSUARIO"
-                        )
-
-                        /*
-                         * Estados:
-                         * utilizados para filtros y visualizacion.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/estados"
-                        )
-                        .hasAnyRole(
-                                "CLIENTE",
-                                "TECNICO",
-                                "ADMINISTRADOR",
-                                "SUPERUSUARIO"
-                        )
-
-                        /*
-                         * Tecnicos disponibles para asignacion.
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/tecnicos"
-                        )
-                        .hasAnyRole(
-                                "ADMINISTRADOR",
-                                "SUPERUSUARIO"
-                        )
-
-
-                        /*
-                         * =====================================================
-                         * RESTO DE ENDPOINTS
-                         * =====================================================
-                         *
-                         * Por ahora requieren autenticacion.
-                         */
-                        .anyRequest()
-                        .authenticated()
+                        .anyRequest().authenticated()
                 )
 
-                /*
-                 * Filtro JWT.
-                 */
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
