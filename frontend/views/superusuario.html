@@ -7,122 +7,195 @@
     <link rel="stylesheet" href="../css/estilos.css">
 </head>
 <body>
-    <div class="app-shell">
-        <aside class="sidebar">
-            <div class="sidebar-marca"><span class="logo"><img src="../css/logo.png" alt="SoporteNet"></span> SoporteNet</div>
-            <span class="sidebar-rol">Superusuario</span>
-            <nav class="sidebar-nav">
-                <a href="#resumen">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                    Resumen
-                </a>
-                <a href="#invitar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 016-6h2a6 6 0 016 6v1M18 8v6M15 11h6"/></svg>
-                    Invitar usuario
-                </a>
-                <a href="#usuarios">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 016-6h2a6 6 0 016 6v1"/><circle cx="17" cy="9" r="3"/><path d="M22 21v-1a5 5 0 00-3-4.6"/></svg>
-                    Usuarios
-                </a>
-                <a href="#grupos-tecnicos">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5V12M12 12L6.8 17M12 12l5.2 5"/></svg>
-                    Grupos técnicos
-                </a>
-            </nav>
-            <div class="sidebar-pie">
-                <span class="id-usuario" id="texto-usuario"></span>
-                <button class="secundario" onclick="cerrarSesion()">Cerrar sesión</button>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-marca"><span class="logo"><img src="../css/logo.png" alt="SoporteNet"></span> SoporteNet</div>
+        <span class="sidebar-rol">Superusuario</span>
+        <nav class="sidebar-nav">
+            <a href="#resumen">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Resumen
+            </a>
+            <a href="#invitar">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 016-6h2a6 6 0 016 6v1M18 8v6M15 11h6"/></svg>
+                Invitar usuario
+            </a>
+            <a href="#usuarios">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 016-6h2a6 6 0 016 6v1"/><circle cx="17" cy="9" r="3"/><path d="M22 21v-1a5 5 0 00-3-4.6"/></svg>
+                Usuarios
+            </a>
+            <a href="#grupos-tecnicos">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5V12M12 12L6.8 17M12 12l5.2 5"/></svg>
+                Grupos técnicos
+            </a>
+            <a href="#auditoria">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                Auditoría
+            </a>
+        </nav>
+        <div class="sidebar-pie">
+            <span class="id-usuario" id="texto-usuario"></span>
+            <button class="secundario" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+    </aside>
+
+    <main class="contenido-principal">
+        <h1>Panel de superusuario</h1>
+
+        <div class="seccion" id="resumen">
+            <div class="fila-metricas" id="fila-metricas"></div>
+        </div>
+
+        <div class="seccion tarjeta" id="invitar">
+            <h2>Invitar usuario</h2>
+            <div id="mensaje-error-invitar" class="mensaje-error oculto"></div>
+            <form id="form-invitar">
+                <div class="campo">
+                    <label for="nombre-usuario">Nombre completo</label>
+                    <input type="text" id="nombre-usuario" required>
+                </div>
+                <div class="campo">
+                    <label for="correo-invitar">Correo</label>
+                    <input type="email" id="correo-invitar" required>
+                </div>
+                <div class="campo" style="max-width: 240px;">
+                    <label for="rol-invitar">Rol</label>
+                    <select id="rol-invitar" required>
+                        <option value="cliente">Cliente</option>
+                        <option value="tecnico">Técnico</option>
+                        <option value="administrador">Administrador</option>
+                        <option value="superusuario">Superusuario</option>
+                    </select>
+                </div>
+                <button type="submit" id="btn-invitar">Enviar invitación</button>
+            </form>
+            <div id="token-generado" class="token-caja oculto"></div>
+        </div>
+
+        <div class="seccion" id="usuarios">
+            <h2>Usuarios</h2>
+            <div class="fila-filtros">
+                <div class="campo">
+                    <label for="filtro-rol">Filtrar por rol</label>
+                    <select id="filtro-rol">
+                        <option value="">Todos</option>
+                        <option value="cliente">Cliente</option>
+                        <option value="tecnico">Técnico</option>
+                        <option value="administrador">Administrador</option>
+                        <option value="superusuario">Superusuario</option>
+                    </select>
+                </div>
             </div>
-        </aside>
+            <div id="mensaje-error-usuarios" class="mensaje-error oculto"></div>
+            <div id="contenedor-tabla-usuarios"></div>
+            <div class="paginacion" id="paginacion-usuarios"></div>
+        </div>
 
-        <main class="contenido-principal">
-            <h1>Panel de superusuario</h1>
-
-            <div class="seccion" id="resumen">
-                <div class="fila-metricas" id="fila-metricas"></div>
-            </div>
-
-            <div class="seccion tarjeta" id="invitar">
-                <h2>Invitar usuario</h2>
-                <div id="mensaje-error-invitar" class="mensaje-error oculto"></div>
-                <form id="form-invitar">
-                    <div class="campo">
-                        <label for="nombre-usuario">Nombre completo</label>
-                        <input type="text" id="nombre-usuario" required>
+        <div class="seccion" id="grupos-tecnicos">
+            <div class="tarjeta" style="margin-bottom: 20px;">
+                <h2>Crear grupo técnico</h2>
+                <div id="mensaje-error-grupo" class="mensaje-error oculto"></div>
+                <form id="form-grupo" class="detalle-form">
+                    <div class="campo" style="flex: 1; min-width: 200px;">
+                        <label for="nombre-grupo">Nombre del grupo</label>
+                        <input type="text" id="nombre-grupo" required>
                     </div>
-                    <div class="campo">
-                        <label for="correo-invitar">Correo</label>
-                        <input type="email" id="correo-invitar" required>
-                    </div>
-                    <div class="campo" style="max-width: 240px;">
-                        <label for="rol-invitar">Rol</label>
-                        <select id="rol-invitar" required>
-                            <option value="cliente">Cliente</option>
-                            <option value="tecnico">Técnico</option>
-                            <option value="administrador">Administrador</option>
-                            <option value="superusuario">Superusuario</option>
-                        </select>
-                    </div>
-                    <button type="submit" id="btn-invitar">Enviar invitación</button>
+                    <button type="submit" style="align-self: flex-end;">Crear grupo</button>
                 </form>
-                <div id="token-generado" class="token-caja oculto"></div>
             </div>
 
-            <div class="seccion" id="usuarios">
-                <h2>Usuarios</h2>
+            <div class="tarjeta" style="margin-bottom: 20px;">
+                <h2>Agregar técnico a un grupo</h2>
+                <div id="mensaje-error-miembro" class="mensaje-error oculto"></div>
+                <form id="form-miembro" class="detalle-form">
+                    <div class="campo" style="min-width: 200px;">
+                        <label for="select-grupo-miembro">Grupo</label>
+                        <select id="select-grupo-miembro"></select>
+                    </div>
+                    <div class="campo" style="min-width: 200px;">
+                        <label for="select-tecnico-miembro">Técnico</label>
+                        <select id="select-tecnico-miembro"></select>
+                    </div>
+                    <button type="submit" style="align-self: flex-end;">Agregar</button>
+                </form>
+            </div>
+
+            <h2>Grupos técnicos existentes</h2>
+            <div id="contenedor-tabla-grupos"></div>
+        </div>
+
+        <div class="seccion" id="auditoria">
+            <h2>Auditoría</h2>
+
+            <div class="fila-metricas" id="fila-metricas-auditoria"></div>
+
+            <div class="fila-filtros" style="margin-top: 20px;">
+                <button type="button" class="subtab-btn activo" data-subtab="cambios">Cambios de datos</button>
+                <button type="button" class="subtab-btn" data-subtab="sesiones">Sesiones</button>
+                <button type="button" class="subtab-btn" data-subtab="historial">Historial de solicitudes</button>
+            </div>
+
+            <div class="subseccion" id="subtab-cambios">
                 <div class="fila-filtros">
                     <div class="campo">
-                        <label for="filtro-rol">Filtrar por rol</label>
-                        <select id="filtro-rol">
-                            <option value="">Todos</option>
-                            <option value="cliente">Cliente</option>
-                            <option value="tecnico">Técnico</option>
-                            <option value="administrador">Administrador</option>
-                            <option value="superusuario">Superusuario</option>
+                        <label for="filtro-tabla-auditoria">Tabla</label>
+                        <input type="text" id="filtro-tabla-auditoria" placeholder="ej. solicitud">
+                    </div>
+                    <div class="campo" style="max-width: 200px;">
+                        <label for="filtro-operacion-auditoria">Operación</label>
+                        <select id="filtro-operacion-auditoria">
+                            <option value="">Todas</option>
+                            <option value="INSERT">INSERT</option>
+                            <option value="UPDATE">UPDATE</option>
+                            <option value="DELETE">DELETE</option>
                         </select>
                     </div>
+                    <div class="campo autocompletar-wrapper" style="min-width: 220px;">
+                        <label for="filtro-usuario-datos">Usuario</label>
+                        <input type="text" id="filtro-usuario-datos" placeholder="Escribe un nombre..." autocomplete="off">
+                        <input type="hidden" id="filtro-usuario-datos-id">
+                        <div class="autocompletar-lista oculto" id="lista-usuario-datos"></div>
+                    </div>
+                    <button type="button" class="secundario" id="btn-limpiar-usuario-datos">Quitar filtro de usuario</button>
                 </div>
-                <div id="mensaje-error-usuarios" class="mensaje-error oculto"></div>
-                <div id="contenedor-tabla-usuarios"></div>
-                <div class="paginacion" id="paginacion-usuarios"></div>
+                <div id="mensaje-error-auditoria-datos" class="mensaje-error oculto"></div>
+                <div id="contenedor-tabla-auditoria-datos"></div>
+                <div class="paginacion" id="paginacion-auditoria-datos"></div>
             </div>
 
-            <div class="seccion" id="grupos-tecnicos">
-                <div class="tarjeta" style="margin-bottom: 20px;">
-                    <h2>Crear grupo técnico</h2>
-                    <div id="mensaje-error-grupo" class="mensaje-error oculto"></div>
-                    <form id="form-grupo" class="detalle-form">
-                        <div class="campo" style="flex: 1; min-width: 200px;">
-                            <label for="nombre-grupo">Nombre del grupo</label>
-                            <input type="text" id="nombre-grupo" required>
-                        </div>
-                        <button type="submit" style="align-self: flex-end;">Crear grupo</button>
-                    </form>
+            <div class="subseccion oculto" id="subtab-sesiones">
+                <div class="fila-filtros">
+                    <div class="campo">
+                        <label><input type="checkbox" id="filtro-activas-sesion"> Solo sesiones activas</label>
+                    </div>
+                    <div class="campo autocompletar-wrapper" style="min-width: 220px;">
+                        <label for="filtro-usuario-sesiones">Usuario</label>
+                        <input type="text" id="filtro-usuario-sesiones" placeholder="Escribe un nombre..." autocomplete="off">
+                        <input type="hidden" id="filtro-usuario-sesiones-id">
+                        <div class="autocompletar-lista oculto" id="lista-usuario-sesiones"></div>
+                    </div>
+                    <button type="button" class="secundario" id="btn-limpiar-usuario-sesiones">Quitar filtro de usuario</button>
                 </div>
-
-                <div class="tarjeta" style="margin-bottom: 20px;">
-                    <h2>Agregar técnico a un grupo</h2>
-                    <div id="mensaje-error-miembro" class="mensaje-error oculto"></div>
-                    <form id="form-miembro" class="detalle-form">
-                        <div class="campo" style="min-width: 200px;">
-                            <label for="select-grupo-miembro">Grupo</label>
-                            <select id="select-grupo-miembro"></select>
-                        </div>
-                        <div class="campo" style="min-width: 200px;">
-                            <label for="select-tecnico-miembro">Técnico</label>
-                            <select id="select-tecnico-miembro"></select>
-                        </div>
-                        <button type="submit" style="align-self: flex-end;">Agregar</button>
-                    </form>
-                </div>
-
-                <h2>Grupos técnicos existentes</h2>
-                <div id="contenedor-tabla-grupos"></div>
+                <div id="mensaje-error-auditoria-sesiones" class="mensaje-error oculto"></div>
+                <div id="contenedor-tabla-auditoria-sesiones"></div>
+                <div class="paginacion" id="paginacion-auditoria-sesiones"></div>
             </div>
-        </main>
-    </div>
 
-    <script src="../js/api.js"></script>
-    <script src="../js/superusuario.js"></script>
+            <div class="subseccion oculto tarjeta" id="subtab-historial">
+                <div class="campo" style="max-width: 240px;">
+                    <label for="input-id-solicitud-historial">ID de solicitud</label>
+                    <input type="number" id="input-id-solicitud-historial" min="1" placeholder="ej. 1542">
+                </div>
+                <button type="button" id="btn-buscar-historial" class="secundario" style="margin-top: 8px;">Buscar</button>
+                <div id="mensaje-error-historial" class="mensaje-error oculto" style="margin-top: 12px;"></div>
+                <div id="contenedor-historial" style="margin-top: 16px;"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/superusuario.js"></script>
+<script src="../js/auditoria.js"></script>
 </body>
 </html>

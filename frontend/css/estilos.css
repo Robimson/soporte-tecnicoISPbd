@@ -733,3 +733,179 @@ tbody tr:hover {
         align-items: stretch;
     }
 }
+/* ---------- Auditoría: sub-pestañas internas ---------- */
+
+.subtab-btn {
+    background: var(--color-superficie);
+    color: var(--color-texto-suave);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.subtab-btn:hover {
+    background: var(--color-fondo);
+    color: var(--color-texto);
+}
+
+.subtab-btn.activo {
+    background: var(--color-primario-suave);
+    color: var(--color-primario);
+    border-color: var(--color-primario);
+}
+
+.subseccion {
+    margin-top: 20px;
+}
+
+/* ---------- Filas clicables (abren detalle) ---------- */
+
+.fila-clic {
+    cursor: pointer;
+}
+
+.fila-clic:hover td {
+    background: var(--color-primario-suave);
+}
+
+/* ---------- Modal de detalle: bloques de texto/JSON ---------- */
+
+.modal-detalle {
+    max-width: 560px;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.modal-detalle p {
+    color: var(--color-texto);
+    font-size: 0.88rem;
+    margin: 0 0 14px;
+    line-height: 1.5;
+}
+
+.modal-detalle p strong {
+    display: block;
+    color: var(--color-texto-suave);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+}
+
+.modal-detalle pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--color-fondo);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    padding: 10px 12px;
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--color-texto);
+}
+
+/* ---------- Línea de tiempo (historial de solicitudes) ---------- */
+
+.linea-tiempo {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 16px;
+}
+
+.paso-tiempo {
+    position: relative;
+    padding: 0 0 22px 28px;
+    border-left: 2px solid var(--color-borde);
+}
+
+.paso-tiempo:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+}
+
+.paso-tiempo::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primario);
+    border: 2px solid var(--color-superficie);
+    box-shadow: 0 0 0 1px var(--color-primario);
+}
+
+.paso-fecha {
+    font-size: 0.76rem;
+    color: var(--color-texto-suave);
+    font-weight: 600;
+}
+
+.paso-usuario {
+    font-size: 0.78rem;
+    color: var(--color-texto-suave);
+    margin-top: 2px;
+}
+
+.paso-cambio {
+    font-size: 0.92rem;
+    color: var(--color-texto);
+    margin-top: 4px;
+}
+
+.paso-cambio strong {
+    color: var(--color-primario);
+}
+#subtab-historial.tarjeta {
+    max-width: 620px;
+}
+
+#subtab-historial .campo {
+    max-width: 240px;
+}
+
+.autocompletar-wrapper {
+    position: relative;
+}
+
+.autocompletar-lista {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-modal);
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+
+.autocompletar-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.autocompletar-item:hover {
+    background: var(--color-primario-suave);
+}
+
+.autocompletar-item .nombre {
+    font-weight: 600;
+    color: var(--color-texto);
+}
+
+.autocompletar-item .detalle {
+    font-size: 0.75rem;
+    color: var(--color-texto-suave);
+}

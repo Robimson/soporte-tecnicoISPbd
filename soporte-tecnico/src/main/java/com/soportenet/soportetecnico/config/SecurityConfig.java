@@ -232,6 +232,22 @@ public class SecurityConfig {
                         ).hasRole("SUPERUSUARIO")
 
 
+
+                        // =================================================
+                        // AUDITORÍA
+                        // =================================================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/auditoria/datos"
+                        ).hasRole("SUPERUSUARIO")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/auditoria/sesiones"
+                        ).hasRole("SUPERUSUARIO")
+
+
                         // =================================================
                         // RESTO DE LA API
                         // =================================================

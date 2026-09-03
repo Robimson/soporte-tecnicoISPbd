@@ -6,6 +6,8 @@ import com.soportenet.soportetecnico.enums.EstadoCuenta;
 import com.soportenet.soportetecnico.enums.RolUsuario;
 import com.soportenet.soportetecnico.repository.UsuarioRepository;
 import com.soportenet.soportetecnico.security.JwtService;
+import com.soportenet.soportetecnico.service.AuditoriaSesionService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -23,6 +25,8 @@ class AuthControllerTest {
     private UsuarioRepository usuarioRepository;
     private PasswordEncoder passwordEncoder;
     private JwtService jwtService;
+    private AuditoriaSesionService auditoriaSesionService;
+    private HttpServletRequest httpRequest;
     private AuthController authController;
 
     @BeforeEach
@@ -30,11 +34,16 @@ class AuthControllerTest {
         usuarioRepository = Mockito.mock(UsuarioRepository.class);
         passwordEncoder = Mockito.mock(PasswordEncoder.class);
         jwtService = Mockito.mock(JwtService.class);
+        auditoriaSesionService = Mockito.mock(AuditoriaSesionService.class);
+        httpRequest = Mockito.mock(HttpServletRequest.class);
+
+        when(httpRequest.getRemoteAddr()).thenReturn("127.0.0.1");
 
         authController = new AuthController(
                 usuarioRepository,
                 passwordEncoder,
-                jwtService
+                jwtService,
+                auditoriaSesionService
         );
     }
 
@@ -65,7 +74,7 @@ class AuthControllerTest {
         )).thenReturn("TOKEN_VALIDO");
 
         ResponseEntity<?> respuesta =
-                authController.login(request);
+                authController.login(request, httpRequest);
 
         assertEquals(
                 HttpStatus.OK,
@@ -76,6 +85,11 @@ class AuthControllerTest {
                 10L,
                 "tecnico",
                 "tecnico@isp.com"
+        );
+
+        verify(auditoriaSesionService).abrirSesion(
+                10L,
+                "127.0.0.1"
         );
     }
 
@@ -100,7 +114,7 @@ class AuthControllerTest {
         )).thenReturn(false);
 
         ResponseEntity<?> respuesta =
-                authController.login(request);
+                authController.login(request, httpRequest);
 
         assertEquals(
                 HttpStatus.UNAUTHORIZED,
@@ -113,6 +127,9 @@ class AuthControllerTest {
                         anyString(),
                         anyString()
                 );
+
+        verify(auditoriaSesionService, never())
+                .abrirSesion(anyLong(), anyString());
     }
 
     @Test
@@ -136,7 +153,7 @@ class AuthControllerTest {
         )).thenReturn(true);
 
         ResponseEntity<?> respuesta =
-                authController.login(request);
+                authController.login(request, httpRequest);
 
         assertEquals(
                 HttpStatus.UNAUTHORIZED,
@@ -165,7 +182,7 @@ class AuthControllerTest {
         )).thenReturn(true);
 
         ResponseEntity<?> respuesta =
-                authController.login(request);
+                authController.login(request, httpRequest);
 
         assertEquals(
                 HttpStatus.UNAUTHORIZED,
@@ -184,7 +201,7 @@ class AuthControllerTest {
                 .thenReturn(Optional.empty());
 
         ResponseEntity<?> respuesta =
-                authController.login(request);
+                authController.login(request, httpRequest);
 
         assertEquals(
                 HttpStatus.UNAUTHORIZED,

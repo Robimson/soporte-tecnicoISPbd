@@ -1,6 +1,8 @@
 package com.soportenet.soportetecnico.repository;
 
 import com.soportenet.soportetecnico.entity.Usuario;
+import java.util.List;
+import com.soportenet.soportetecnico.entity.Usuario;
 import com.soportenet.soportetecnico.enums.RolUsuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -57,4 +59,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
             @Param("idUsuarioObjetivo") Long idUsuarioObjetivo,
             @Param("nuevoEstado") String nuevoEstado
     );
+
+    List<Usuario> findTop8ByNombreUsuarioContainingIgnoreCaseOrderByNombreUsuario(String nombre);
 }

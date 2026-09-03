@@ -1,0 +1,127 @@
+package com.soportenet.soportetecnico.dto;
+
+import java.time.OffsetDateTime;
+
+public class AuditoriaSesionResponse {
+
+    private Long idSesion;
+    private Long idUsuario;
+
+    private String nombreUsuario;
+    private String correo;
+    private String rol;
+    private String estadoCuenta;
+
+    private OffsetDateTime fechaEntrada;
+    private OffsetDateTime ultimaActividad;
+    private OffsetDateTime fechaSalida;
+
+    private String ipOrigen;
+
+    public AuditoriaSesionResponse() {
+    }
+
+    public AuditoriaSesionResponse(
+            Long idSesion,
+            Long idUsuario,
+            String nombreUsuario,
+            String correo,
+            String rol,
+            String estadoCuenta,
+            OffsetDateTime fechaEntrada,
+            OffsetDateTime ultimaActividad,
+            OffsetDateTime fechaSalida,
+            String ipOrigen
+    ) {
+        this.idSesion = idSesion;
+        this.idUsuario = idUsuario;
+        this.nombreUsuario = nombreUsuario;
+        this.correo = correo;
+        this.rol = rol;
+        this.estadoCuenta = estadoCuenta;
+        this.fechaEntrada = fechaEntrada;
+        this.ultimaActividad = ultimaActividad;
+        this.fechaSalida = fechaSalida;
+        this.ipOrigen = ipOrigen;
+    }
+
+    public Long getIdSesion() {
+        return idSesion;
+    }
+
+    public void setIdSesion(Long idSesion) {
+        this.idSesion = idSesion;
+    }
+
+    public Long getIdUsuario() {
+        return idUsuario;
+    }
+
+    public void setIdUsuario(Long idUsuario) {
+        this.idUsuario = idUsuario;
+    }
+
+    public String getNombreUsuario() {
+        return nombreUsuario;
+    }
+
+    public void setNombreUsuario(String nombreUsuario) {
+        this.nombreUsuario = nombreUsuario;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
+
+    public String getEstadoCuenta() {
+        return estadoCuenta;
+    }
+
+    public void setEstadoCuenta(String estadoCuenta) {
+        this.estadoCuenta = estadoCuenta;
+    }
+
+    public OffsetDateTime getFechaEntrada() {
+        return fechaEntrada;
+    }
+
+    public void setFechaEntrada(OffsetDateTime fechaEntrada) {
+        this.fechaEntrada = fechaEntrada;
+    }
+
+    public OffsetDateTime getUltimaActividad() {
+        return ultimaActividad;
+    }
+
+    public void setUltimaActividad(OffsetDateTime ultimaActividad) {
+        this.ultimaActividad = ultimaActividad;
+    }
+
+    public OffsetDateTime getFechaSalida() {
+        return fechaSalida;
+    }
+
+    public void setFechaSalida(OffsetDateTime fechaSalida) {
+        this.fechaSalida = fechaSalida;
+    }
+
+    public String getIpOrigen() {
+        return ipOrigen;
+    }
+
+    public void setIpOrigen(String ipOrigen) {
+        this.ipOrigen = ipOrigen;
+    }
+}

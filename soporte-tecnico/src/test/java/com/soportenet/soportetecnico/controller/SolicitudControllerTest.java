@@ -2,6 +2,7 @@ package com.soportenet.soportetecnico.controller;
 
 import com.soportenet.soportetecnico.entity.Cliente;
 import com.soportenet.soportetecnico.entity.Solicitud;
+import com.soportenet.soportetecnico.repository.AdjuntoRepository;
 import com.soportenet.soportetecnico.repository.SolicitudRepository;
 import com.soportenet.soportetecnico.service.AdjuntoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+
 import java.util.List;
 import java.util.Optional;
 
@@ -22,20 +24,29 @@ import static org.mockito.Mockito.when;
 class SolicitudControllerTest {
 
     private SolicitudRepository solicitudRepository;
+    private AdjuntoRepository adjuntoRepository;
     private AdjuntoService adjuntoService;
+
     private SolicitudController solicitudController;
 
     @BeforeEach
     void configurar() {
 
-        solicitudRepository = Mockito.mock(SolicitudRepository.class);
+        solicitudRepository =
+                Mockito.mock(SolicitudRepository.class);
 
-        adjuntoService = Mockito.mock(AdjuntoService.class);
+        adjuntoRepository =
+                Mockito.mock(AdjuntoRepository.class);
 
-        solicitudController = new SolicitudController(
-                solicitudRepository,
-                adjuntoService
-        );
+        adjuntoService =
+                Mockito.mock(AdjuntoService.class);
+
+        solicitudController =
+                new SolicitudController(
+                        solicitudRepository,
+                        adjuntoRepository,
+                        adjuntoService
+                );
     }
 
     @Test
@@ -60,7 +71,9 @@ class SolicitudControllerTest {
                         idClienteAutenticado.toString(),
                         null,
                         List.of(
-                                new SimpleGrantedAuthority("ROLE_CLIENTE")
+                                new SimpleGrantedAuthority(
+                                        "ROLE_CLIENTE"
+                                )
                         )
                 );
 
@@ -97,7 +110,9 @@ class SolicitudControllerTest {
                         idCliente.toString(),
                         null,
                         List.of(
-                                new SimpleGrantedAuthority("ROLE_CLIENTE")
+                                new SimpleGrantedAuthority(
+                                        "ROLE_CLIENTE"
+                                )
                         )
                 );
 
@@ -135,7 +150,9 @@ class SolicitudControllerTest {
                         idTecnico.toString(),
                         null,
                         List.of(
-                                new SimpleGrantedAuthority("ROLE_TECNICO")
+                                new SimpleGrantedAuthority(
+                                        "ROLE_TECNICO"
+                                )
                         )
                 );
 
@@ -173,7 +190,9 @@ class SolicitudControllerTest {
                         idTecnico.toString(),
                         null,
                         List.of(
-                                new SimpleGrantedAuthority("ROLE_TECNICO")
+                                new SimpleGrantedAuthority(
+                                        "ROLE_TECNICO"
+                                )
                         )
                 );
 
@@ -206,7 +225,9 @@ class SolicitudControllerTest {
                         idAdministrador.toString(),
                         null,
                         List.of(
-                                new SimpleGrantedAuthority("ROLE_ADMINISTRADOR")
+                                new SimpleGrantedAuthority(
+                                        "ROLE_ADMINISTRADOR"
+                                )
                         )
                 );
 
@@ -239,7 +260,9 @@ class SolicitudControllerTest {
                         idSuperusuario.toString(),
                         null,
                         List.of(
-                                new SimpleGrantedAuthority("ROLE_SUPERUSUARIO")
+                                new SimpleGrantedAuthority(
+                                        "ROLE_SUPERUSUARIO"
+                                )
                         )
                 );
 
