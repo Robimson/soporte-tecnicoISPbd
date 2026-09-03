@@ -909,3 +909,34 @@ tbody tr:hover {
     font-size: 0.75rem;
     color: var(--color-texto-suave);
 }
+
+.lista-archivos {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.archivo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-fondo);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    padding: 6px 10px;
+    font-size: 0.82rem;
+}
+
+.archivo-item .quitar-archivo {
+    background: none;
+    color: var(--color-peligro);
+    border: none;
+    padding: 2px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.archivo-item .quitar-archivo:hover {
+    background: var(--color-peligro-suave);
+}

@@ -60,5 +60,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
             @Param("nuevoEstado") String nuevoEstado
     );
 
-    List<Usuario> findTop8ByNombreUsuarioContainingIgnoreCaseOrderByNombreUsuario(String nombre);
+    List<Usuario> findTop8ByNombreUsuarioContainingIgnoreCaseOrCorreoContainingIgnoreCaseOrderByNombreUsuario(
+            String nombre,
+            String correo
+    );
 }

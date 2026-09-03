@@ -247,8 +247,13 @@ public class AuditoriaController {
             return ResponseEntity.ok(List.of());
         }
 
+        String termino = nombre.trim();
+
         List<Usuario> usuarios =
-                usuarioRepository.findTop8ByNombreUsuarioContainingIgnoreCaseOrderByNombreUsuario(nombre.trim());
+                usuarioRepository.findTop8ByNombreUsuarioContainingIgnoreCaseOrCorreoContainingIgnoreCaseOrderByNombreUsuario(
+                        termino,
+                        termino
+                );
 
         List<UsuarioBusquedaDTO> dtos = usuarios.stream()
                 .map(u -> {

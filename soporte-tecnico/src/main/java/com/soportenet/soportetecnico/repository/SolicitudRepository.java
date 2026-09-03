@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.time.OffsetDateTime;
 
 public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
 
@@ -171,5 +172,87 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
             @Param("idSolicitud") Long idSolicitud,
             @Param("idCliente") Long idCliente,
             @Param("problemaResuelto") Boolean problemaResuelto
+    );
+
+
+    /** Cuenta las tareas del técnico (asignadas directa o por grupo) en un estado dado. */
+    @Query(
+            value = """
+                SELECT count(*)
+                FROM solicitud s
+                JOIN asignacion_solicitud a
+                    ON a.id_solicitud = s.id_solicitud
+                    AND a.vigente = true
+                LEFT JOIN tecnico_grupo tg
+                    ON tg.id_grupo = a.id_grupo
+                    AND tg.id_usuario = :idTecnico
+                JOIN estado e
+                    ON e.id_estado = s.id_estado
+                WHERE (a.id_tecnico = :idTecnico OR tg.id_usuario = :idTecnico)
+                  AND e.nombre_estado = :nombreEstado
+                """,
+            nativeQuery = true
+    )
+    long contarMisTareasPorEstado(
+            @Param("idTecnico") Long idTecnico,
+            @Param("nombreEstado") String nombreEstado
+    );
+
+    /**
+     * Cuenta cambios de estado (via historial_estado) hacia un patrón de estado
+     * (ej. 'Resuelta%'), para tareas del técnico, desde una fecha dada.
+     */
+    @Query(
+            value = """
+                SELECT count(*)
+                FROM historial_estado h
+                JOIN estado e
+                    ON e.id_estado = h.estado_nuevo
+                JOIN solicitud s
+                    ON s.id_solicitud = h.id_solicitud
+                JOIN asignacion_solicitud a
+                    ON a.id_solicitud = s.id_solicitud
+                    AND a.vigente = true
+                LEFT JOIN tecnico_grupo tg
+                    ON tg.id_grupo = a.id_grupo
+                    AND tg.id_usuario = :idTecnico
+                WHERE (a.id_tecnico = :idTecnico OR tg.id_usuario = :idTecnico)
+                  AND e.nombre_estado LIKE :patronEstado
+                  AND h.fecha_cambio >= :desde
+                """,
+            nativeQuery = true
+    )
+    long contarHistorialPorEstadoDesde(
+            @Param("idTecnico") Long idTecnico,
+            @Param("patronEstado") String patronEstado,
+            @Param("desde") OffsetDateTime desde
+    );
+
+    /**
+     * Cuenta cambios de estado (via historial_estado) hacia un patrón de estado,
+     * para tareas del técnico, sin filtro de fecha (histórico completo).
+     */
+    @Query(
+            value = """
+                SELECT count(*)
+                FROM historial_estado h
+                JOIN estado e
+                    ON e.id_estado = h.estado_nuevo
+                JOIN solicitud s
+                    ON s.id_solicitud = h.id_solicitud
+                JOIN asignacion_solicitud a
+                    ON a.id_solicitud = s.id_solicitud
+                    AND a.vigente = true
+                LEFT JOIN tecnico_grupo tg
+                    ON tg.id_grupo = a.id_grupo
+                    AND tg.id_usuario = :idTecnico
+                WHERE (a.id_tecnico = :idTecnico OR tg.id_usuario = :idTecnico)
+                  AND e.nombre_estado LIKE :patronEstado
+                """,
+            nativeQuery = true
+    )
+    long contarHistorialPorEstado(
+            @Param("idTecnico") Long idTecnico,
+            @Param("patronEstado") String patronEstado
     );
 }

@@ -3,7 +3,11 @@
 
     document.getElementById('texto-usuario').textContent = 'Técnico #' + obtenerIdUsuario();
 
+    const MAX_EVIDENCIAS = 5;
+    const TIPOS_PERMITIDOS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+
     let paginaActual = 0;
+    let archivosSeleccionados = [];
 
     const mensajeErrorLista = document.getElementById('mensaje-error-lista');
     const contenedorTabla = document.getElementById('contenedor-tabla');
@@ -14,19 +18,31 @@
     const mensajeErrorReportar = document.getElementById('mensaje-error-reportar');
     const formReportar = document.getElementById('form-reportar');
     const filaMetricas = document.getElementById('fila-metricas');
+    const inputEvidencias = document.getElementById('input-evidencias');
+    const listaEvidencias = document.getElementById('lista-evidencias');
+
+    // ---------- Métricas ----------
 
     async function cargarMetricas() {
         filaMetricas.innerHTML =
-            '<div class="tarjeta-metrica"><div class="valor">—</div><div class="etiqueta">Tareas asignadas</div></div>';
+            '<div class="tarjeta-metrica"><div class="valor">—</div><div class="etiqueta">En proceso</div></div>' +
+            '<div class="tarjeta-metrica"><div class="valor">—</div><div class="etiqueta">Pendientes</div></div>' +
+            '<div class="tarjeta-metrica"><div class="valor">—</div><div class="etiqueta">Resueltas hoy</div></div>' +
+            '<div class="tarjeta-metrica"><div class="valor">—</div><div class="etiqueta">Total cerradas</div></div>';
 
         try {
-            const pagina = await apiFetch('/api/solicitudes/mis-tareas?size=1');
+            const r = await apiFetch('/api/solicitudes/mis-tareas/resumen');
             filaMetricas.innerHTML =
-                '<div class="tarjeta-metrica"><div class="valor">' + pagina.totalElements + '</div><div class="etiqueta">Tareas asignadas</div></div>';
+                '<div class="tarjeta-metrica"><div class="valor">' + r.enProceso + '</div><div class="etiqueta">En proceso</div></div>' +
+                '<div class="tarjeta-metrica"><div class="valor">' + r.pendientes + '</div><div class="etiqueta">Pendientes</div></div>' +
+                '<div class="tarjeta-metrica"><div class="valor">' + r.resueltasHoy + '</div><div class="etiqueta">Resueltas hoy</div></div>' +
+                '<div class="tarjeta-metrica"><div class="valor">' + r.totalCerradas + '</div><div class="etiqueta">Total cerradas</div></div>';
         } catch (error) {
             console.error('No se pudieron cargar las métricas:', error);
         }
     }
+
+    // ---------- Listado de tareas ----------
 
     function filaSolicitud(s) {
         const claseBadge = claseBadgeEstado(s.estado);
@@ -89,14 +105,62 @@
         if (btnSiguiente) btnSiguiente.addEventListener('click', function () { paginaActual++; cargarMisTareas(); });
     }
 
+    // ---------- Panel de reportar (con evidencias) ----------
+
     function abrirPanelReportar(idSolicitud) {
         panelReportar.classList.remove('oculto');
         idSolicitudReportar.textContent = '#' + idSolicitud;
         formReportar.dataset.idSolicitud = idSolicitud;
         document.getElementById('detalle-reporte').value = '';
+        archivosSeleccionados = [];
+        inputEvidencias.value = '';
+        renderizarListaEvidencias();
         ocultarMensaje(mensajeErrorReportar);
         panelReportar.scrollIntoView({ behavior: 'smooth' });
     }
+
+    function renderizarListaEvidencias() {
+        if (!archivosSeleccionados.length) {
+            listaEvidencias.innerHTML = '';
+            return;
+        }
+        listaEvidencias.innerHTML = archivosSeleccionados.map(function (archivo, indice) {
+            return '<div class="archivo-item">' +
+                '<span>' + escaparHtml(archivo.name) + '</span>' +
+                '<button type="button" class="quitar-archivo" data-indice="' + indice + '">Quitar</button>' +
+                '</div>';
+        }).join('');
+
+        listaEvidencias.querySelectorAll('.quitar-archivo').forEach(function (boton) {
+            boton.addEventListener('click', function () {
+                archivosSeleccionados.splice(Number(boton.getAttribute('data-indice')), 1);
+                renderizarListaEvidencias();
+            });
+        });
+    }
+
+    inputEvidencias.addEventListener('change', function () {
+        const nuevos = Array.from(inputEvidencias.files);
+
+        for (const archivo of nuevos) {
+            if (archivosSeleccionados.length >= MAX_EVIDENCIAS) {
+                mostrarError(mensajeErrorReportar, new Error('Máximo ' + MAX_EVIDENCIAS + ' archivos.'));
+                break;
+            }
+            if (!TIPOS_PERMITIDOS.includes(archivo.type)) {
+                mostrarError(mensajeErrorReportar, new Error('"' + archivo.name + '" no es una imagen ni un PDF válido.'));
+                continue;
+            }
+            if (archivo.size > 10 * 1024 * 1024) {
+                mostrarError(mensajeErrorReportar, new Error('"' + archivo.name + '" supera los 10 MB.'));
+                continue;
+            }
+            archivosSeleccionados.push(archivo);
+        }
+
+        inputEvidencias.value = '';
+        renderizarListaEvidencias();
+    });
 
     document.getElementById('btn-cancelar-reporte').addEventListener('click', function () {
         panelReportar.classList.add('oculto');
@@ -119,8 +183,20 @@
                 body: JSON.stringify({ detalleReporte: detalleReporte })
             });
 
+            // Subir evidencias, una por una, sobre la solicitud
+            for (const archivo of archivosSeleccionados) {
+                const formData = new FormData();
+                formData.append('archivo', archivo);
+
+                await apiFetch('/api/solicitudes/' + idSolicitud + '/adjuntos', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
             panelReportar.classList.add('oculto');
             cargarMisTareas();
+            cargarMetricas();
         } catch (error) {
             mostrarError(mensajeErrorReportar, error);
         } finally {

@@ -13,6 +13,11 @@
 
     let ultimoTotalReportesPendientes = null;
 
+    // Guarda qué sección estaba visible antes de abrir un panel flotante,
+    // para poder restaurarla al cerrar (evita que quede visible la lista
+    // de abajo mientras se ve el panel).
+    let seccionVisibleAntesDePanel = null;
+
 
     const filaMetricas =
         document.getElementById('fila-metricas');
@@ -40,6 +45,11 @@
     const mensajeErrorReportes =
         document.getElementById(
             'mensaje-error-reportes'
+        );
+
+    const mensajeExitoReportes =
+        document.getElementById(
+            'mensaje-exito-reportes'
         );
 
     const contenedorTablaReportes =
@@ -136,6 +146,76 @@
         document.getElementById(
             'detalle-solicitud-evidencias'
         );
+
+
+    // ============================================================
+    // MENSAJE DE ÉXITO (reportes)
+    // ============================================================
+
+    function mostrarExitoReportes(texto) {
+
+        mensajeExitoReportes.textContent = texto;
+        mensajeExitoReportes.classList.remove('oculto');
+
+        setTimeout(function () {
+            mensajeExitoReportes.classList.add('oculto');
+        }, 4000);
+    }
+
+
+    // ============================================================
+    // MOSTRAR/OCULTAR SOLO EL PANEL ACTIVO
+    // (evita que la lista de abajo quede visible mientras se ve
+    //  un panel flotante como "Ver solicitud", "Asignar" o "Rechazar")
+    // ============================================================
+
+    function ocultarSeccionesParaPanel() {
+
+        const secciones =
+            document.querySelectorAll(
+                '.contenido-principal > .seccion'
+            );
+
+        let encontrada = null;
+
+        secciones.forEach(function (seccion) {
+
+            if (!seccion.classList.contains('oculto')) {
+                encontrada = seccion.id;
+            }
+        });
+
+        if (encontrada) {
+            seccionVisibleAntesDePanel = encontrada;
+        }
+
+        secciones.forEach(function (seccion) {
+            seccion.classList.add('oculto');
+        });
+    }
+
+
+    function restaurarSeccionesTrasPanel() {
+
+        if (!seccionVisibleAntesDePanel) {
+            return;
+        }
+
+        const secciones =
+            document.querySelectorAll(
+                '.contenido-principal > .seccion'
+            );
+
+        secciones.forEach(function (seccion) {
+
+            seccion.classList.toggle(
+                'oculto',
+                seccion.id !== seccionVisibleAntesDePanel
+            );
+        });
+
+        seccionVisibleAntesDePanel = null;
+    }
 
 
     // ============================================================
@@ -254,6 +334,8 @@
 
         detalleSolicitudEvidencias.innerHTML =
             '';
+
+        restaurarSeccionesTrasPanel();
     }
 
 
@@ -751,6 +833,8 @@
 
         cerrarPanelesFlotantes();
 
+        ocultarSeccionesParaPanel();
+
         panelEvidencias
             .classList
             .remove('oculto');
@@ -826,7 +910,7 @@
 
                     '<div class="vacio">' +
 
-                    'El cliente no ha adjuntado evidencias a esta solicitud.' +
+                    'No hay evidencias adjuntas a esta solicitud.' +
 
                     '</div>';
 
@@ -900,14 +984,6 @@
 
             return;
         }
-
-        /*
-         * Abrimos la pestaña inmediatamente.
-         *
-         * Esto evita que el navegador bloquee
-         * la nueva pestaña por considerarla un
-         * popup no solicitado.
-         */
 
         const nuevaPestana =
             window.open(
@@ -1002,39 +1078,16 @@
                 );
             }
 
-            /*
-             * Convertimos la respuesta del servidor
-             * en Blob.
-             */
-
             const blob =
                 await respuesta.blob();
-
-            /*
-             * Creamos una URL temporal.
-             */
 
             const urlBlob =
                 URL.createObjectURL(
                     blob
                 );
 
-            /*
-             * La nueva pestaña navega al Blob.
-             *
-             * Si es PDF:
-             * Chrome mostrará el visor PDF.
-             *
-             * Si es imagen:
-             * Chrome mostrará la imagen.
-             */
-
             nuevaPestana.location.href =
                 urlBlob;
-
-            /*
-             * Liberamos la URL después de un tiempo.
-             */
 
             setTimeout(
                 function () {
@@ -1104,13 +1157,6 @@
             === 'application/pdf';
 
         let contenido = '';
-
-        /*
-         * Para las imágenes también usamos
-         * el endpoint autenticado.
-         *
-         * No usamos directamente urlAlmacenamiento.
-         */
 
         if (esImagen) {
 
@@ -1226,6 +1272,8 @@
     ) {
 
         cerrarPanelesFlotantes();
+
+        ocultarSeccionesParaPanel();
 
         panelAsignar
             .classList
@@ -1401,6 +1449,23 @@
 
     function filaReporte(r) {
 
+        const botonesAccion =
+            r.estadoAprobacion === 'pendiente'
+                ? (
+                    '<button data-id="' +
+                    r.idReporte +
+                    '" class="btn-aprobar">' +
+                    'Aprobar' +
+                    '</button>' +
+
+                    '<button data-id="' +
+                    r.idReporte +
+                    '" class="btn-rechazar secundario">' +
+                    'Rechazar' +
+                    '</button>'
+                )
+                : '';
+
         return (
 
             '<tr>' +
@@ -1431,25 +1496,15 @@
 
             '<td>' +
 
-            '<div class="acciones-fila">' +
+            '<div class="acciones-reporte">' +
 
-            (
-                r.estadoAprobacion === 'pendiente'
-                    ? (
-                        '<button data-id="' +
-                        r.idReporte +
-                        '" class="btn-aprobar">' +
-                        'Aprobar' +
-                        '</button>' +
+            botonesAccion +
 
-                        '<button data-id="' +
-                        r.idReporte +
-                        '" class="btn-rechazar secundario">' +
-                        'Rechazar' +
-                        '</button>'
-                    )
-                    : '—'
-            ) +
+            '<button data-id-solicitud="' +
+            r.idSolicitud +
+            '" class="btn-ver-evidencias-reporte secundario">' +
+            'Ver evidencias' +
+            '</button>' +
 
             '</div>' +
 
@@ -1623,6 +1678,25 @@
                     );
                 });
 
+            contenedorTablaReportes
+                .querySelectorAll(
+                    '.btn-ver-evidencias-reporte'
+                )
+                .forEach(function (boton) {
+
+                    boton.addEventListener(
+                        'click',
+                        function () {
+
+                            abrirPanelEvidencias(
+                                boton.getAttribute(
+                                    'data-id-solicitud'
+                                )
+                            );
+                        }
+                    );
+                });
+
         } catch (error) {
 
             contenedorTablaReportes.innerHTML =
@@ -1700,6 +1774,10 @@
                 }
             );
 
+            mostrarExitoReportes(
+                'Reporte #' + idReporte + ' aprobado exitosamente.'
+            );
+
             cargarReportesPendientes();
 
             cargarSolicitudes();
@@ -1728,6 +1806,8 @@
     ) {
 
         cerrarPanelesFlotantes();
+
+        ocultarSeccionesParaPanel();
 
         panelRechazar
             .classList
@@ -1819,6 +1899,10 @@
                 );
 
                 cerrarPanelesFlotantes();
+
+                mostrarExitoReportes(
+                    'Reporte #' + idReporte + ' rechazado correctamente.'
+                );
 
                 cargarReportesPendientes();
 

@@ -26,6 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.soportenet.soportetecnico.dto.ResumenTecnicoDTO;
+import java.time.OffsetDateTime;
+
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -579,6 +582,29 @@ public class SolicitudController {
                 )
         );
     }
+
+
+
+    @GetMapping("/mis-tareas/resumen")
+    public ResponseEntity<ResumenTecnicoDTO> resumenMisTareas(
+            Authentication authentication
+    ) {
+
+        Long idTecnico = Long.valueOf(authentication.getName());
+
+        OffsetDateTime inicioHoy = OffsetDateTime.now()
+                .withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+        ResumenTecnicoDTO dto = new ResumenTecnicoDTO();
+        dto.setEnProceso(solicitudRepository.contarMisTareasPorEstado(idTecnico, "En Proceso"));
+        dto.setPendientes(solicitudRepository.contarMisTareasPorEstado(idTecnico, "Pendiente"));
+        dto.setResueltasHoy(solicitudRepository.contarHistorialPorEstadoDesde(idTecnico, "Resuelta%", inicioHoy));
+        dto.setTotalCerradas(solicitudRepository.contarHistorialPorEstado(idTecnico, "Cerrada"));
+
+        return ResponseEntity.ok(dto);
+    }
+
+
 
     // ============================================================
     // CONFIRMAR SOLICITUD
